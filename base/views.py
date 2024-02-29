@@ -79,7 +79,7 @@ def home(request):
         Q(room__topic__name__icontains=q))[0:3]
 
     context = {'rooms': rooms, 'topics': topics,
-               'room_count': room_count, 'room_messages': room_messages}
+               'room_count': room_count, 'room_messages': room_messages, 'q': q}
     return render(request, 'base/home.html', context)
 
 
@@ -100,6 +100,13 @@ def room(request, pk):
     context = {'room': room, 'room_messages': room_messages,
                'participants': participants}
     return render(request, 'base/room.html', context)
+
+
+def chat_messages(request, pk):
+    room = Room.objects.get(id=pk)
+    room_messages = room.message_set.all()
+    context = {'room_messages': room_messages}
+    return render(request, 'base/message_component.html', context)
 
 
 def userProfile(request, pk):
