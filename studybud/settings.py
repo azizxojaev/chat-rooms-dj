@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     'base.apps.BaseConfig',
 
     'rest_framework',
+    'channels',
     "corsheaders",
 ]
 
@@ -79,7 +82,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'studybud.wsgi.application'
+# WSGI_APPLICATION = 'studybud.wsgi.application'
+ASGI_APPLICATION = 'studybud.asgi.application'
+
 
 
 # Database
@@ -90,6 +95,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
+
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    },
 }
 
 
