@@ -8,7 +8,7 @@
         </div>
         <span>@{{message.user.username}}</span>
         </a>
-        <span class="thread__date">{{message.created|timesince}} ago</span>
+        <span class="thread__date">{{message.created}}</span>
     </div>
 
     {% if request.user == message.user %}

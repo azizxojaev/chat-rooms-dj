@@ -96,57 +96,13 @@
 
         <div class="room__conversation">
           <div class="threads scroll" id="messages">
-            {% for message in room_messages %}
-            <div class="thread">
-              <div class="thread__top">
-                <div class="thread__author">
-                  <a
-                    href="{% url 'user-profile' message.user.id %}"
-                    class="thread__authorInfo"
-                  >
-                    <div class="avatar avatar--small">
-                      <img src="{{message.user.avatar.url}}" />
-                    </div>
-                    <span>@{{message.user.username}}</span>
-                  </a>
-                  <span class="thread__date"
-                    >{{message.created|timesince}} ago</span
-                  >
-                </div>
-
-                {% if request.user == message.user %}
-                <a href="{% url 'delete-message' message.id %}">
-                  <div class="thread__delete">
-                    <svg
-                      version="1.1"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="32"
-                      height="32"
-                      viewBox="0 0 32 32"
-                    >
-                      <title>remove</title>
-                      <path
-                        d="M27.314 6.019l-1.333-1.333-9.98 9.981-9.981-9.981-1.333 1.333 9.981 9.981-9.981 9.98 1.333 1.333 9.981-9.98 9.98 9.98 1.333-1.333-9.98-9.98 9.98-9.981z"
-                      ></path>
-                    </svg>
-                  </div>
-                </a>
-                {% endif %}
-              </div>
-              <div class="thread__details">{{message.body}}</div>
-            </div>
-            {% endfor %}
+            {% include 'base/message_component.html' %}
           </div>
         </div>
       </div>
-      <div
-        class="room__message"
-        data-room_pk="{{ room.pk }}"
-        data-user="{{ request.user.id }}"
-      >
-        <form action="" onsubmit="sendText()" method="POST">
-          {% csrf_token %}
-          <input id="input" placeholder="Write your message here..." />
+      <div class="room__message">
+        <form onsubmit="sendText(event)">
+          <input id="input" {% if not request.user.is_authenticated %}disabled{% endif %} placeholder="{% if request.user.is_authenticated %}Write your message here...{% else %}You don't logged in!{% endif %}" />
         </form>
       </div>
     </div>
@@ -180,14 +136,23 @@
     "ws://127.0.0.1:8000/ws/chat/{{ room.id }}/"
   );
 
-  exampleSocket.onopen = (event) => {
-    console.log(event);
+  exampleSocket.onmessage = (event) => {
+    $.ajax({
+      url: "{% url 'messages' room.pk %}",
+      type: 'GET',
+      success: function(response) {
+        $('#messages').html(response);
+      },
+      error: function(xhr, status, error) {
+        console.error('AJAX Error:', status, error);
+      }
+    });
   };
 
   let input = document.querySelector("#input");
 
   function sendText(e) {
-    e.preventdefault();
+    e.preventDefault();
     const msg = {
       type: "message",
       message: input.value,
