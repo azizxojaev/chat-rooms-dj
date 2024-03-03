@@ -137,16 +137,21 @@
   );
 
   exampleSocket.onmessage = (event) => {
-    $.ajax({
-      url: "{% url 'messages' room.pk %}",
-      type: 'GET',
-      success: function(response) {
-        $('#messages').html(response);
-      },
-      error: function(xhr, status, error) {
-        console.error('AJAX Error:', status, error);
-      }
-    });
+    var jsonObject = JSON.parse(event.data);
+
+    let wrapper = document.querySelector("#messages")
+    var existingThread = document.querySelector('.example_thread');
+    var newThread = existingThread.cloneNode(true);
+    newThread.hidden = false
+    newThread.classList.remove('example_thread')
+
+    newThread.children[0].children[0].children[0].href = `/profile/${jsonObject.user}/`
+    newThread.children[0].children[0].children[0].children[0].children[0].src = jsonObject.avatar
+    newThread.children[0].children[0].children[0].children[1].textContent = `@${jsonObject.username}`
+    newThread.children[0].children[0].children[1].textContent = jsonObject.created
+    newThread.children[1].textContent = jsonObject.message
+
+    wrapper.insertBefore(newThread, wrapper.firstChild);
   };
 
   let input = document.querySelector("#input");

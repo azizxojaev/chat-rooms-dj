@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -45,6 +46,12 @@ class Message(models.Model):
 
     class Meta:
         ordering = ['-updated', '-created']
+
+    @property
+    def formatted_created(self):
+        utc_time = self.created
+        local_time = timezone.localtime(utc_time)
+        return local_time.strftime('%b %d, %H:%M')
 
     def __str__(self):
         return self.body[0:50]
