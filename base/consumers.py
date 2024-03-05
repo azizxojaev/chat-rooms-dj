@@ -20,10 +20,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
 
-        username, avatar, created = await self.save_message_to_database(text_data_json)
+        username, avatar, created, is_user_exists, name = await self.save_message_to_database(text_data_json)
 
         text_data_json['username'] = username
         text_data_json['avatar'] = avatar
+        text_data_json['is_user_exists'] = is_user_exists
+        text_data_json['name'] = name
 
         utc_time = created
         local_time = timezone.localtime(utc_time)
@@ -53,7 +55,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             room=room
         )
 
-        return user.username, user.avatar.url, message_obj.created
+        is_user_exists = room.participants.filter(id=user.id).exists()
+        room.participants.add(user)
+
+        return user.username, user.avatar.url, message_obj.created, is_user_exists, user.name
     
 
 class TypingConsumer(AsyncWebsocketConsumer):

@@ -127,6 +127,15 @@
           </p>
         </a>
         {% endfor %}
+        <a href="" style="display: none;" class="example-participant participant">
+          <div class="avatar avatar--medium">
+            <img src="" />
+          </div>
+          <p>
+            <span></span>
+            <span></span>
+          </p>
+        </a>
       </div>
     </div>
     <!--  End -->
@@ -206,6 +215,22 @@
     newThread.children[1].textContent = jsonObject.message
 
     wrapper.insertBefore(newThread, wrapper.firstChild);
+
+    if (jsonObject['is_user_exists'] == false) {
+      let participant_wrapper = document.querySelector('.participants__list')
+
+      var existingParticipant = document.querySelector('.example-participant');
+      var newParticipant = existingParticipant.cloneNode(true);
+      newParticipant.style.display = 'flex';
+      newParticipant.href = `/profile/${jsonObject.user}/`
+      newParticipant.children[0].children[0].src = jsonObject.avatar
+      newParticipant.children[1].children[0].textContent = jsonObject.name
+      newParticipant.children[1].children[1].textContent = `@${jsonObject.username}`
+
+      console.log(newParticipant.children[0])
+
+      participant_wrapper.append(newParticipant)
+    }
   };
 
   let input = document.querySelector("#input");
