@@ -86,12 +86,14 @@
               <span>@{{room.host.username}}</span>
             </a>
           </div>
-          <!-- <div class="room__details">
-            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quasi, tenetur laudantium? Dicta repellendus
-            rerum consectetur, voluptatem repudiandae eum ea porro cupiditate provident nulla, deserunt, ab ipsum
-            corporis laboriosam deleniti molestias?
-          </div> -->
+          <div class="room__details">
+            {{ room.description }}
+          </div>
           <span class="room__topics">{{room.topic}}</span>
+          <div style="display: flex;" id="typing">
+            <p></p>
+            <span hidden style="margin-left: 5px;">typing...</span>
+          </div>
         </div>
 
         <div class="room__conversation">
@@ -102,7 +104,7 @@
       </div>
       <div class="room__message">
         <form onsubmit="sendText(event)">
-          <input id="input" {% if not request.user.is_authenticated %}disabled{% endif %} placeholder="{% if request.user.is_authenticated %}Write your message here...{% else %}You don't logged in!{% endif %}" />
+          <input oninput="checkTyping(this)" id="input" {% if not request.user.is_authenticated %}disabled{% endif %} placeholder="{% if request.user.is_authenticated %}Write your message here...{% else %}You don't logged in!{% endif %}" />
         </form>
       </div>
     </div>
@@ -130,6 +132,58 @@
     <!--  End -->
   </div>
 </main>
+
+<script>
+  let currentURL = window.location.href;
+  let baseURL = currentURL.split('/')[2]
+
+  const typingSocket = new WebSocket(`ws://${baseURL}/ws/typing/{{ room.id }}/{{ request.user.username }}/`)
+
+  let typing_wrapper = document.querySelector('#typing')
+
+  typingSocket.onmessage = (event) => {
+    let jsonAction = JSON.parse(event.data)
+    let action = jsonAction["action"]
+
+    console.log(jsonAction)
+
+    if (action == "typing") {
+      if (jsonAction['user'] != '{{ request.user.username }}') {
+        typing_wrapper.children[1].hidden = false
+        if (typing_wrapper.children[0].textContent.includes(jsonAction['user']) == false) {
+          if (typing_wrapper.children[0].textContent == "") {
+            typing_wrapper.children[0].textContent = typing_wrapper.children[0].textContent + jsonAction['user']
+          } else {
+            typing_wrapper.children[0].textContent = typing_wrapper.children[0].textContent + ', ' + jsonAction['user']
+          }
+        }
+      }
+    } else {
+      if (typing_wrapper.children[0].textContent.includes(`, ${jsonAction['user']}`)) {
+        typing_wrapper.children[0].textContent = typing_wrapper.children[0].textContent.replace(`, ${jsonAction['user']}`, '')
+      } else if (typing_wrapper.children[0].textContent.includes(`${jsonAction['user']}, `)) {
+        typing_wrapper.children[0].textContent = typing_wrapper.children[0].textContent.replace(`${jsonAction['user']}, `, '')
+      } else {
+        typing_wrapper.children[0].textContent = typing_wrapper.children[0].textContent.replace(`${jsonAction['user']}`, '')
+      }
+      if (typing_wrapper.children[0].textContent == "") {
+        typing_wrapper.children[1].hidden = true
+      }
+    }
+  }
+
+  function checkTyping(input) {
+    let action = {
+      type: "action",
+      action: "typing",
+      user: "{{ request.user.username }}"
+    }
+    if (input.value == "") {
+      action["action"] = "not typing"
+    }
+    typingSocket.send(JSON.stringify(action))
+  }
+</script>
 
 <script>
   const exampleSocket = new WebSocket(

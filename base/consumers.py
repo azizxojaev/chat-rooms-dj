@@ -54,3 +54,32 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
         return user.username, user.avatar.url, message_obj.created
+    
+
+class TypingConsumer(AsyncWebsocketConsumer):
+
+    async def connect(self):
+        self.username = self.scope["url_route"]["kwargs"]["username"]
+        self.room_id = self.scope["url_route"]["kwargs"]["room"]
+        self.users_group = f"chatActions_{self.room_id}"
+
+
+        await self.channel_layer.group_add(self.users_group, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_send(
+            self.users_group, {"type": "make.typing", "action": {'type': 'action', 'action': 'not typing', 'user': self.username}}
+        )
+        await self.channel_layer.group_discard(self.users_group, self.channel_name)
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+
+        await self.channel_layer.group_send(
+            self.users_group, {"type": "make.typing", "action": text_data_json}
+        )
+    
+    async def make_typing(self, event):
+        action = event["action"]
+        await self.send(text_data=json.dumps(action))
