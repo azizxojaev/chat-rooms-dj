@@ -196,7 +196,7 @@
 
 <script>
   const exampleSocket = new WebSocket(
-    "ws://127.0.0.1:8000/ws/chat/{{ room.id }}/"
+    `ws://${baseURL}/ws/chat/{{ room.id }}/`
   );
 
   exampleSocket.onmessage = (event) => {
